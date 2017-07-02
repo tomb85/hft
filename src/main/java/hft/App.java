@@ -1,26 +1,20 @@
 package hft;
 
-import com.google.gson.Gson;
-import com.squareup.okhttp.Call;
+import com.neovisionaries.ws.client.WebSocketException;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 
-/**
- * Hello world!
- *
- */
-public class App 
-{
+public class App {
+
     private static OkHttpClient client = new OkHttpClient();
 
-    public static void main( String[] args ) throws IOException {
-
-        System.out.println(getForSymbol("BTC-EUR"));
-        System.out.println(getForSymbol("ETH-EUR"));
-        System.out.println(getForSymbol("ETH-BTC"));
+    public static void main(String[] args) throws WebSocketException, IOException {
+        OrderBookManager orderBookManager = new OrderBookManager(null);
+        WebsocketMarketDataReceiver marketDataReceiver = new WebsocketMarketDataReceiver(orderBookManager);
+        marketDataReceiver.start();
     }
 
     private static Tick getForSymbol(String symbol) throws IOException {
