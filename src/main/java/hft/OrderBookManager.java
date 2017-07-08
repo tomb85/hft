@@ -2,7 +2,10 @@ package hft;
 
 import com.google.common.collect.Maps;
 import com.squareup.okhttp.OkHttpClient;
-import hft.data.OrderReceived;
+import hft.gdax.websocket.message.Done;
+import hft.gdax.websocket.message.Match;
+import hft.gdax.websocket.message.Open;
+import hft.gdax.websocket.message.Received;
 
 import java.util.Map;
 
@@ -18,9 +21,27 @@ public class OrderBookManager implements MarketDataListener {
     }
 
     @Override
-    public void onMessage(OrderReceived orderReceived) {
-        String symbol = orderReceived.getSymbol();
-        getBook(symbol).onMessage(orderReceived);
+    public void onMessage(Received received) {
+        String symbol = received.getSymbol();
+        getBook(symbol).onMessage(received);
+    }
+
+    @Override
+    public void onMessage(Open open) {
+        String symbol = open.getSymbol();
+        getBook(symbol).onMessage(open);
+    }
+
+    @Override
+    public void onMessage(Done done) {
+        String symbol = done.getSymbol();
+        getBook(symbol).onMessage(done);
+    }
+
+    @Override
+    public void onMessage(Match match) {
+        String symbol = match.getSymbol();
+        getBook(symbol).onMessage(match);
     }
 
     private OrderBook getBook(String symbol) {

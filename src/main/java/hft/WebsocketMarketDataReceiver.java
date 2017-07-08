@@ -2,7 +2,10 @@ package hft;
 
 import com.google.gson.Gson;
 import com.neovisionaries.ws.client.*;
-import hft.data.OrderReceived;
+import hft.gdax.websocket.message.Done;
+import hft.gdax.websocket.message.Match;
+import hft.gdax.websocket.message.Open;
+import hft.gdax.websocket.message.Received;
 
 import java.io.IOException;
 import java.util.List;
@@ -51,7 +54,17 @@ public class WebsocketMarketDataReceiver extends WebSocketAdapter {
         char code = text.charAt(9);
         switch (code) {
             case 'r':
-                listener.onMessage(GSON.fromJson(text, OrderReceived.class));
+                listener.onMessage(GSON.fromJson(text, Received.class));
+                break;
+            case 'o':
+                listener.onMessage(GSON.fromJson(text, Open.class));
+                break;
+            case 'd':
+                listener.onMessage(GSON.fromJson(text, Done.class));
+                break;
+            case 'm':
+                listener.onMessage(GSON.fromJson(text, Match.class));
+                break;
         }
     }
 }
