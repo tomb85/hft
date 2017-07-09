@@ -7,10 +7,9 @@ public class Open {
     private String product_id;
     private long sequence;
     private String order_id;
-    private double price;
+    private String price;
     private double remaining_size;
     private String side;
-    private double size;
 
     public String getSymbol() {
         return product_id;
@@ -20,7 +19,7 @@ public class Open {
         return sequence;
     }
 
-    public double getPrice() {
+    public String getPrice() {
         return price;
     }
 
@@ -28,8 +27,8 @@ public class Open {
         return side;
     }
 
-    public double getSize() {
-        return size;
+    public double getRemainingSize() {
+        return remaining_size;
     }
 }
 

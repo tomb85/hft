@@ -2,6 +2,7 @@ package hft;
 
 import com.google.common.collect.Maps;
 import com.squareup.okhttp.OkHttpClient;
+import hft.gdax.Product;
 import hft.gdax.websocket.message.Done;
 import hft.gdax.websocket.message.Match;
 import hft.gdax.websocket.message.Open;
@@ -52,6 +53,7 @@ public class OrderBookManager implements MarketDataListener {
     }
 
     private OrderBook createBook(String symbol) {
-        return new OrderBook(symbol, httpClient, listener);
+        Product product = Product.fromProductId(symbol);
+        return new OrderBook(product, httpClient, listener);
     }
 }

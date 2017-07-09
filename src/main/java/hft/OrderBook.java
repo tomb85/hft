@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+import hft.gdax.Product;
 import hft.gdax.rest.message.BookLvl3;
 import hft.gdax.websocket.message.Done;
 import hft.gdax.websocket.message.Match;
@@ -18,24 +19,23 @@ import java.util.TreeMap;
 public class OrderBook implements MarketDataListener {
 
     private static final Gson GSON = new Gson();
+    private static final double THRESHOLD = 0.000000001;
 
-    private final String symbol;
+    private final Product product;
     private final OkHttpClient httpClient;
     private final OrderBookListener listener;
     private final String request;
 
     private long sequence;
-    private Map<String, Double> bids = Maps.newHashMap();
-    private Map<String, Double> asks = Maps.newHashMap();
-    private double bestBid;
-    private double bestAsk;
+    private TreeMap<String, Double> bids = Maps.newTreeMap(this::bids);
+    private TreeMap<String, Double> asks = Maps.newTreeMap(this::asks);
     private Tick top;
 
-    public OrderBook(String symbol, OkHttpClient httpClient, OrderBookListener listener) {
-        this.symbol = symbol;
+    public OrderBook(Product product, OkHttpClient httpClient, OrderBookListener listener) {
+        this.product = product;
         this.httpClient = httpClient;
         this.listener = listener;
-        request = String.format("https://api.gdax.com/products/%s/book?level=3", symbol);
+        request = String.format("https://api.gdax.com/products/%s/book?level=3", product);
     }
 
     @Override
@@ -54,19 +54,20 @@ public class OrderBook implements MarketDataListener {
         if (check(incomingSequence)) {
             if (incomingSequence > sequence) {
                 sequence = incomingSequence;
-                double price = open.getPrice();
-                double size = open.getSize();
+                String price = open.getPrice();
+                double size = open.getRemainingSize();
                 if ("sell".equals(open.getSide())) {
-                    if (!asks.containsKey(String.valueOf(price))) {
-                        asks.put(String.valueOf(price), 0.0);
+                    if (!asks.containsKey(price)) {
+                        asks.put(price, 0.0);
                     }
-                    asks.put(String.valueOf(price), asks.get(String.valueOf(price)) + size);
+                    asks.put(price, asks.get(price) + size);
                 } else {
-                    if (!bids.containsKey(String.valueOf(price))) {
-                        bids.put(String.valueOf(price), 0.0);
+                    if (!bids.containsKey(price)) {
+                        bids.put(price, 0.0);
                     }
-                    bids.put(String.valueOf(price), bids.get(String.valueOf(price)) + size);
+                    bids.put(price, bids.get(price) + size);
                 }
+                fireUpdate();
             }
         }
     }
@@ -79,19 +80,24 @@ public class OrderBook implements MarketDataListener {
                 sequence = incomingSequence;
                 if ("canceled".equals(done.getReason())) {
                     sequence = incomingSequence;
-                    double price = done.getPrice();
+                    String price = done.getPrice();
                     double size = done.getRemainingSize();
                     if ("sell".equals(done.getSide())) {
-                        asks.put(String.valueOf(price), asks.get(String.valueOf(price)) - size);
-                        if (asks.get(String.valueOf(price)) <= 0.0) {
-                            asks.remove(String.valueOf(price));
+                        double askSize = asks.get(price);
+                        asks.put(price, askSize - size);
+                        askSize = asks.get(price);
+                        if (askSize >= -THRESHOLD && askSize <= THRESHOLD) {
+                            asks.remove(price);
                         }
                     } else {
-                        bids.put(String.valueOf(price), bids.get(String.valueOf(price)) - size);
-                        if (bids.get(String.valueOf(price)) <= 0.0) {
-                            bids.remove(String.valueOf(price));
+                        double bidSize = bids.get(price);
+                        bids.put(price, bidSize - size);
+                        bidSize = bids.get(price);
+                        if (bidSize >= -THRESHOLD && bidSize <= THRESHOLD) {
+                            bids.remove(price);
                         }
                     }
+                    fireUpdate();
                 }
             }
         }
@@ -103,7 +109,31 @@ public class OrderBook implements MarketDataListener {
         if (check(incomingSequence)) {
             if (incomingSequence > sequence) {
                 sequence = incomingSequence;
+                String price = match.getPrice();
+                double size = match.getSize();
+                if ("sell".equals(match.getSide())) {
+                    double askSize = asks.get(price);
+                    asks.put(price, askSize - size);
+                    askSize = asks.get(price);
+                    if (askSize >= -THRESHOLD && askSize <= THRESHOLD) {
+                        asks.remove(price);
+                    }
+                } else {
+                    double bidSize = bids.get(price);
+                    bids.put(price, bidSize - size);
+                    bidSize = bids.get(price);
+                    if (bidSize >= -THRESHOLD && bidSize <= THRESHOLD) {
+                        bids.remove(price);
+                    }
+                }
+                fireUpdate();
             }
+        }
+    }
+
+    private void fireUpdate() {
+        if (topChanged()) {
+            listener.onTick(top);
         }
     }
 
@@ -119,6 +149,8 @@ public class OrderBook implements MarketDataListener {
     }
 
     private void init() throws IOException {
+        bids.clear();
+        asks.clear();
         Response response = httpClient.newCall(new Request.Builder().get().url(request).build()).execute();
         if (response.isSuccessful()) {
             String json = response.body().string();
@@ -133,37 +165,17 @@ public class OrderBook implements MarketDataListener {
     }
 
     private boolean topChanged() {
-        findBestBid();
-        findBestAsk();
-        Tick tick = Tick.forSymbol(symbol).withSequence(sequence).withBidPrice(bestBid).withAskPrice(bestAsk).build();
-        if (!top.equals(tick)) {
+        double bidPrice = Double.parseDouble(bids.firstKey());
+        double bidSize = bids.firstEntry().getValue();
+        double askPrice = Double.parseDouble(asks.firstKey());
+        double askSize = asks.firstEntry().getValue();
+        Tick tick = Tick.forSymbol(product.getId()).withSequence(sequence).withBidPrice(bidPrice).withAskPrice(askPrice).withBidSize(bidSize).withAskSize(askSize).build();
+        if (!tick.equals(top)) {
             top = tick;
             return true;
         } else {
             return false;
         }
-    }
-
-    private void findBestBid() {
-        double bestPrice = 0.0;
-        for (String key : bids.keySet()) {
-            double price = Double.parseDouble(key);
-            if (price > bestPrice) {
-                bestPrice = price;
-            }
-        }
-        bestBid = bestPrice;
-    }
-
-    private void findBestAsk() {
-        double bestPrice = Double.MAX_VALUE;
-        for (String key : asks.keySet()) {
-            double price = Double.parseDouble(key);
-            if (price < bestPrice) {
-                bestPrice = price;
-            }
-        }
-        bestAsk = bestPrice;
     }
 
     private void populate(Map<String, Double> target, String[][] data) {
@@ -177,9 +189,22 @@ public class OrderBook implements MarketDataListener {
         }
     }
 
-    private static int bids(String lhs, String rhs) {
-        long first = Math.round(Double.parseDouble(lhs) * 100000000);
-        long second = Math.round(Double.parseDouble(rhs) * 100000000);
+    private int bids(String lhs, String rhs) {
+        long first = convertPrice(lhs);
+        long second = convertPrice(rhs);
+        if (first > second) {
+            return -1;
+        } else if (first < second) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+
+    private int asks(String lhs, String rhs) {
+        long first = convertPrice(lhs);
+        long second = convertPrice(rhs);
         if (first > second) {
             return 1;
         } else if (first < second) {
@@ -189,42 +214,7 @@ public class OrderBook implements MarketDataListener {
         }
     }
 
-
-    private static int asks(String lhs, String rhs) {
-        long first = Math.round(Double.parseDouble(lhs) * 100000000);
-        long second = Math.round(Double.parseDouble(rhs) * 100000000);
-        return (int) (second - first);
+    private long convertPrice(String price) {
+        return Math.round(Double.parseDouble(price) * product.getMultiplier());
     }
-
-    public static void main(String[] args) {
-
-        TreeMap<String, Double> bids = Maps.newTreeMap(OrderBook::bids);
-        bids.put("223.3", 23.9);
-        bids.put("123.3", 23.9);
-
-        System.out.println(bids.firstKey());
-
-
-    }
-
 }
-
-//sequence;
-//
-//        if (seq == 0 => seq = init)
-//
-//        if (incomingSeq < seq => discard)
-//
-//        if (incomingSeq - seq > 1 => seq = init)
-//
-//        else => seq = incomingSeq, applyMsg
-//
-//        == check if top changed
-//
-//        use websocket session id?
-
-
-
-
-
-

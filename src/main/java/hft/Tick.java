@@ -1,7 +1,5 @@
 package hft;
 
-import com.google.gson.Gson;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Tick {
@@ -27,6 +25,37 @@ public class Tick {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Tick tick = (Tick) o;
+
+        if (Double.compare(tick.bidPrice, bidPrice) != 0) return false;
+        if (Double.compare(tick.bidSize, bidSize) != 0) return false;
+        if (Double.compare(tick.askPrice, askPrice) != 0) return false;
+        if (Double.compare(tick.askSize, askSize) != 0) return false;
+        return symbol != null ? symbol.equals(tick.symbol) : tick.symbol == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = symbol != null ? symbol.hashCode() : 0;
+        temp = Double.doubleToLongBits(bidPrice);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(bidSize);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(askPrice);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(askSize);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "Tick{" +
                 "symbol='" + symbol + '\'' +
@@ -39,8 +68,6 @@ public class Tick {
     }
 
     public static final class TickBuilder {
-
-        private static final Gson GSON = new Gson();
 
         private final String symbol;
         private long sequence;
@@ -78,25 +105,9 @@ public class Tick {
             return this;
         }
 
-        public TickBuilder fromJson(String json) {
-            TickRaw raw = GSON.fromJson(json, TickRaw.class);
-            sequence = Long.parseLong(raw.sequence);
-            bidPrice = Double.parseDouble(raw.bids[0][0]);
-            bidSize = Double.parseDouble(raw.bids[0][1]);
-            askPrice = Double.parseDouble(raw.asks[0][0]);
-            askSize = Double.parseDouble(raw.asks[0][1]);
-            return this;
-        }
-
         public Tick build() {
             Tick tick = new Tick(symbol, sequence, bidPrice, bidSize, askPrice, askSize);
             return tick;
         }
-    }
-
-    private class TickRaw {
-        private String sequence;
-        private String[][] bids;
-        private String[][] asks;
     }
 }

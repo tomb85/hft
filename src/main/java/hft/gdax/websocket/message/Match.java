@@ -10,7 +10,7 @@ public class Match {
     private String time;
     private String product_id;
     private double size;
-    private double price;
+    private String price;
     private String side;
 
     public String getSymbol() {
@@ -19,6 +19,18 @@ public class Match {
 
     public long getSequence() {
         return sequence;
+    }
+
+    public String getPrice() {
+        return price;
+    }
+
+    public double getSize() {
+        return size;
+    }
+
+    public String getSide() {
+        return side;
     }
 }
 

@@ -6,7 +6,7 @@ public class Done {
     private String time;
     private String product_id;
     private long sequence_id;
-    private double price;
+    private String price;
     private String order_id;
     private String reason;
     private String side;
@@ -21,7 +21,7 @@ public class Done {
         return sequence;
     }
 
-    public double getPrice() {
+    public String getPrice() {
         return price;
     }
 

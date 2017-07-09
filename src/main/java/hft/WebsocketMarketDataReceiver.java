@@ -14,7 +14,8 @@ import java.util.Map;
 public class WebsocketMarketDataReceiver extends WebSocketAdapter {
 
     private static final Gson GSON = new Gson();
-    private static final String SUBSCRIPTION_KEY = "{\"type\":\"subscribe\",\"product_ids\":[\"BTC-EUR\",\"ETH-EUR\",\"ETH-BTC\"]}";
+    private static final String SUBSCRIPTION_KEY = "{\"type\":\"subscribe\",\"product_ids\":[\"BTC-EUR\",\"ETH-EUR\",\"ETH-BTC\",\"LTC-EUR\",\"LTC-BTC\"]}";
+//    private static final String SUBSCRIPTION_KEY = "{\"type\":\"subscribe\",\"product_ids\":[\"BTC-USD\"]}";
 
     private final MarketDataListener listener;
 
