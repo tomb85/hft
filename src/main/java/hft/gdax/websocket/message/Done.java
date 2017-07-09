@@ -2,6 +2,7 @@ package hft.gdax.websocket.message;
 
 public class Done {
 
+    private String sessionId;
     private String type;
     private String time;
     private String product_id;
@@ -35,6 +36,10 @@ public class Done {
 
     public String getReason() {
         return reason;
+    }
+
+    public String getSessionId() {
+        return sessionId;
     }
 }
 

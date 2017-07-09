@@ -27,6 +27,7 @@ public class OrderBook implements MarketDataListener {
     private final String request;
 
     private long sequence;
+    private String sessionId;
     private TreeMap<String, Double> bids = Maps.newTreeMap(this::bids);
     private TreeMap<String, Double> asks = Maps.newTreeMap(this::asks);
     private Tick top;
@@ -44,6 +45,7 @@ public class OrderBook implements MarketDataListener {
         if (check(incomingSequence)) {
             if (incomingSequence > sequence) {
                 sequence = incomingSequence;
+                sessionId = received.getSessionId();
             }
         }
     }
@@ -54,6 +56,7 @@ public class OrderBook implements MarketDataListener {
         if (check(incomingSequence)) {
             if (incomingSequence > sequence) {
                 sequence = incomingSequence;
+                sessionId = open.getSessionId();
                 String price = open.getPrice();
                 double size = open.getRemainingSize();
                 if ("sell".equals(open.getSide())) {
@@ -78,6 +81,7 @@ public class OrderBook implements MarketDataListener {
         if (check(incomingSequence)) {
             if (incomingSequence > sequence) {
                 sequence = incomingSequence;
+                sessionId = done.getSessionId();
                 if ("canceled".equals(done.getReason())) {
                     sequence = incomingSequence;
                     String price = done.getPrice();
@@ -109,6 +113,7 @@ public class OrderBook implements MarketDataListener {
         if (check(incomingSequence)) {
             if (incomingSequence > sequence) {
                 sequence = incomingSequence;
+                sessionId = match.getSessionId();
                 String price = match.getPrice();
                 double size = match.getSize();
                 if ("sell".equals(match.getSide())) {
@@ -158,9 +163,6 @@ public class OrderBook implements MarketDataListener {
             sequence = lvl3.getSequence();
             populate(bids, lvl3.getBids());
             populate(asks, lvl3.getAsks());
-            if (topChanged()) {
-                System.out.println(top);
-            }
         }
     }
 
@@ -169,7 +171,7 @@ public class OrderBook implements MarketDataListener {
         double bidSize = bids.firstEntry().getValue();
         double askPrice = Double.parseDouble(asks.firstKey());
         double askSize = asks.firstEntry().getValue();
-        Tick tick = Tick.forSymbol(product.getId()).withSequence(sequence).withBidPrice(bidPrice).withAskPrice(askPrice).withBidSize(bidSize).withAskSize(askSize).build();
+        Tick tick = Tick.forSymbol(product.getId()).withSessionId(sessionId).withBidPrice(bidPrice).withAskPrice(askPrice).withBidSize(bidSize).withAskSize(askSize).build();
         if (!tick.equals(top)) {
             top = tick;
             return true;

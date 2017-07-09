@@ -5,15 +5,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Tick {
 
     private final String symbol;
-    private final long sequence;
+    private final String sessionId;
     private final double bidPrice;
     private final double bidSize;
     private final double askPrice;
     private final double askSize;
 
-    public Tick(String symbol, long sequence, double bidPrice, double bidSize, double askPrice, double askSize) {
+    public Tick(String symbol, String sessionId, double bidPrice, double bidSize, double askPrice, double askSize) {
         this.symbol = checkNotNull(symbol);
-        this.sequence = sequence;
+        this.sessionId = checkNotNull(sessionId);
         this.bidPrice = bidPrice;
         this.bidSize = bidSize;
         this.askPrice = askPrice;
@@ -59,7 +59,7 @@ public class Tick {
     public String toString() {
         return "Tick{" +
                 "symbol='" + symbol + '\'' +
-                ", sequence=" + sequence +
+                ", sessionId='" + sessionId + '\'' +
                 ", bidPrice=" + bidPrice +
                 ", bidSize=" + bidSize +
                 ", askPrice=" + askPrice +
@@ -70,7 +70,7 @@ public class Tick {
     public static final class TickBuilder {
 
         private final String symbol;
-        private long sequence;
+        private String sessionId;
         private double bidPrice;
         private double bidSize;
         private double askPrice;
@@ -78,11 +78,6 @@ public class Tick {
 
         public TickBuilder(String symbol) {
             this.symbol = checkNotNull(symbol);
-        }
-
-        public TickBuilder withSequence(long sequence) {
-            this.sequence = sequence;
-            return this;
         }
 
         public TickBuilder withBidPrice(double bidPrice) {
@@ -105,8 +100,13 @@ public class Tick {
             return this;
         }
 
+        public TickBuilder withSessionId(String sessionId) {
+            this.sessionId = sessionId;
+            return this;
+        }
+
         public Tick build() {
-            Tick tick = new Tick(symbol, sequence, bidPrice, bidSize, askPrice, askSize);
+            Tick tick = new Tick(symbol, sessionId, bidPrice, bidSize, askPrice, askSize);
             return tick;
         }
     }

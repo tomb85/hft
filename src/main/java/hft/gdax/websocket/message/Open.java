@@ -2,6 +2,7 @@ package hft.gdax.websocket.message;
 
 public class Open {
 
+    private String sessionId;
     private String type;
     private String time;
     private String product_id;
@@ -29,6 +30,10 @@ public class Open {
 
     public double getRemainingSize() {
         return remaining_size;
+    }
+
+    public String getSessionId() {
+        return sessionId;
     }
 }
 

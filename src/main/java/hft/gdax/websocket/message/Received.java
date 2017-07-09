@@ -2,6 +2,7 @@ package hft.gdax.websocket.message;
 
 public class Received {
 
+    private String sessionId;
     private String type;
     private String time;
     private String product_id;
@@ -19,6 +20,10 @@ public class Received {
 
     public long getSequence() {
         return sequence;
+    }
+
+    public String getSessionId() {
+        return sessionId;
     }
 }
 

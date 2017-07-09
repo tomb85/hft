@@ -2,6 +2,7 @@ package hft.gdax.websocket.message;
 
 public class Match {
 
+    private String sessionId;
     private String type;
     private long trade_id;
     private long sequence;
@@ -31,6 +32,10 @@ public class Match {
 
     public String getSide() {
         return side;
+    }
+
+    public String getSessionId() {
+        return sessionId;
     }
 }
 
