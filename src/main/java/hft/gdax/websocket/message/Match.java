@@ -37,6 +37,10 @@ public class Match {
     public String getSessionId() {
         return sessionId;
     }
+
+    public String getOrderId() {
+        return maker_order_id;
+    }
 }
 
 /*

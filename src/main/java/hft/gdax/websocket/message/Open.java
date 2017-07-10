@@ -35,6 +35,10 @@ public class Open {
     public String getSessionId() {
         return sessionId;
     }
+
+    public String getOrderId() {
+        return order_id;
+    }
 }
 
 /*

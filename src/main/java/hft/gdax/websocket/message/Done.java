@@ -41,6 +41,10 @@ public class Done {
     public String getSessionId() {
         return sessionId;
     }
+
+    public String getOrderId() {
+        return order_id;
+    }
 }
 
 /*

@@ -2,6 +2,7 @@ package hft.gdax;
 
 public enum Product {
 
+    BTC_USD("BTC-USD", 100),
     BTC_EUR("BTC-EUR", 100),
     ETH_EUR("ETH-EUR", 100),
     LTC_EUR("LTC-EUR", 100),
