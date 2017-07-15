@@ -12,6 +12,7 @@ import hft.gdax.websocket.message.Done;
 import hft.gdax.websocket.message.Match;
 import hft.gdax.websocket.message.Open;
 import hft.gdax.websocket.message.Received;
+import org.joda.time.format.ISODateTimeFormat;
 
 import java.io.IOException;
 import java.util.Map;
@@ -30,6 +31,7 @@ public class OrderBook implements MarketDataListener {
 
     private long sequence;
     private String sessionId;
+    private long time;
     private TreeMap<String, Double> bids = Maps.newTreeMap(this::bids);
     private TreeMap<String, Double> asks = Maps.newTreeMap(this::asks);
     private Tick top;
@@ -49,6 +51,7 @@ public class OrderBook implements MarketDataListener {
             if (incomingSequence > sequence) {
                 sequence = incomingSequence;
                 sessionId = received.getSessionId();
+                time = ISODateTimeFormat.dateTimeParser().parseMillis(received.getTime());
             }
         }
     }
@@ -60,6 +63,7 @@ public class OrderBook implements MarketDataListener {
             if (incomingSequence > sequence) {
                 sequence = incomingSequence;
                 sessionId = open.getSessionId();
+                time = ISODateTimeFormat.dateTimeParser().parseMillis(open.getTime());
                 String price = open.getPrice();
                 double size = open.getRemainingSize();
                 openOrders.add(open.getOrderId());
@@ -86,6 +90,7 @@ public class OrderBook implements MarketDataListener {
             if (incomingSequence > sequence) {
                 sequence = incomingSequence;
                 sessionId = done.getSessionId();
+                time = ISODateTimeFormat.dateTimeParser().parseMillis(done.getTime());
                 if ("canceled".equals(done.getReason())) {
                     String orderId = done.getOrderId();
                     if (openOrders.contains(orderId)) {
@@ -122,6 +127,7 @@ public class OrderBook implements MarketDataListener {
             if (incomingSequence > sequence) {
                 sequence = incomingSequence;
                 sessionId = match.getSessionId();
+                time = ISODateTimeFormat.dateTimeParser().parseMillis(match.getTime());
                 String price = match.getPrice();
                 double size = match.getSize();
                 String orderId = match.getOrderId();
@@ -182,7 +188,15 @@ public class OrderBook implements MarketDataListener {
         double bidSize = bids.firstEntry().getValue();
         double askPrice = Double.parseDouble(asks.firstKey());
         double askSize = asks.firstEntry().getValue();
-        Tick tick = Tick.forSymbol(product.getId()).withSessionId(sessionId).withBidPrice(bidPrice).withAskPrice(askPrice).withBidSize(bidSize).withAskSize(askSize).build();
+        Tick tick = Tick
+                .forSymbol(product.getId())
+                .withSessionId(sessionId)
+                .withTime(time)
+                .withBidPrice(bidPrice)
+                .withAskPrice(askPrice)
+                .withBidSize(bidSize)
+                .withAskSize(askSize)
+                .build();
         if (!tick.equals(top)) {
             top = tick;
             return true;

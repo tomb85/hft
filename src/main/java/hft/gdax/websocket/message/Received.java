@@ -25,6 +25,10 @@ public class Received {
     public String getSessionId() {
         return sessionId;
     }
+
+    public String getTime() {
+        return time;
+    }
 }
 
 /*

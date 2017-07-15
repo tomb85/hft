@@ -45,6 +45,10 @@ public class Done {
     public String getOrderId() {
         return order_id;
     }
+
+    public String getTime() {
+        return time;
+    }
 }
 
 /*

@@ -41,6 +41,10 @@ public class Match {
     public String getOrderId() {
         return maker_order_id;
     }
+
+    public String getTime() {
+        return time;
+    }
 }
 
 /*

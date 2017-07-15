@@ -39,6 +39,10 @@ public class Open {
     public String getOrderId() {
         return order_id;
     }
+
+    public String getTime() {
+        return time;
+    }
 }
 
 /*
