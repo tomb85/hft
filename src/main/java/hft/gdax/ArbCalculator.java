@@ -1,24 +1,19 @@
 package hft.gdax;
 
 import com.google.common.collect.Maps;
-import com.google.gson.internal.$Gson$Preconditions;
 import hft.OrderBookListener;
 import hft.Tick;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileAttribute;
 import java.util.EnumSet;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static hft.gdax.Product.BTC_EUR;
-import static hft.gdax.Product.ETH_BTC;
-import static hft.gdax.Product.ETH_EUR;
+import static hft.gdax.Product.*;
 
 public class ArbCalculator implements OrderBookListener {
 

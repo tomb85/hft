@@ -1,7 +1,5 @@
 package hft;
 
-import hft.gdax.Product;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Tick {
