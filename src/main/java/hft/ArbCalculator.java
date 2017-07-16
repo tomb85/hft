@@ -1,8 +1,7 @@
-package hft.gdax;
+package hft;
 
 import com.google.common.collect.Maps;
-import hft.OrderBookListener;
-import hft.Tick;
+import hft.gdax.Product;
 import org.joda.time.LocalDate;
 
 import java.io.BufferedWriter;
