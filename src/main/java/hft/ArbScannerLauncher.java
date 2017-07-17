@@ -1,16 +1,17 @@
 package hft;
 
 import com.neovisionaries.ws.client.WebSocketException;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 
-public class App {
+public class ArbScannerLauncher {
+
+    private static final Logger LOG = Logger.getLogger(ArbScannerLauncher.class);
 
     public static void main(String[] args) throws WebSocketException, IOException {
 
-        System.out.println("Application name: " + System.getProperty("app.name", "UNKNOWN"));
-        System.out.println("Process id: " + System.getProperty("app.pid", "UNKNOWN"));
-        System.out.println("Base dir " + System.getProperty("app.home", "UNKNOWN"));
+        LOG.info("Process id: " + System.getProperty("app.pid", "UNKNOWN"));
 
         OrderBookManager orderBookManager = new OrderBookManager(new ArbCalculator());
         WebsocketMarketDataReceiver marketDataReceiver = new WebsocketMarketDataReceiver(orderBookManager);
