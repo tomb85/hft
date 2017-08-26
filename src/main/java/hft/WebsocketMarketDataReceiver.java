@@ -29,6 +29,8 @@ public class WebsocketMarketDataReceiver extends WebSocketAdapter {
 
     private final MarketDataListener listener;
 
+    private HeartbeatMonitor heartbeatMonitor;
+
     private String sessionId;
 
     public WebsocketMarketDataReceiver(MarketDataListener listener) {
@@ -51,6 +53,11 @@ public class WebsocketMarketDataReceiver extends WebSocketAdapter {
         sessionId = UUID.randomUUID().toString();
         LOG.info("Connected to market data websocket. Established new session " + sessionId);
         subscribe(websocket);
+        startHearbeatMonitoring(websocket);
+    }
+
+    private void startHearbeatMonitoring(WebSocket websocket) {
+        heartbeatMonitor = new HeartbeatMonitor(websocket);
     }
 
     private void subscribe(WebSocket websocket) {
@@ -62,7 +69,7 @@ public class WebsocketMarketDataReceiver extends WebSocketAdapter {
 
     @Override
     public void onDisconnected(WebSocket websocket, WebSocketFrame serverCloseFrame, WebSocketFrame clientCloseFrame, boolean closedByServer) throws IOException {
-        LOG.warn("Disconnected, closedByServer: " + closedByServer + ", serverCloseFrame: " + serverCloseFrame + ", clientCloseFrame: " + clientCloseFrame);
+        LOG.info("Disconnected, closedByServer: " + closedByServer);
         connect();
     }
 
@@ -83,6 +90,9 @@ public class WebsocketMarketDataReceiver extends WebSocketAdapter {
                 break;
             case 'm':
                 listener.onMessage(GSON.fromJson(obj, Match.class));
+                break;
+            case 'h':
+                heartbeatMonitor.onHeartbeat();
                 break;
         }
     }
