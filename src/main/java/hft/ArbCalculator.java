@@ -55,14 +55,14 @@ public class ArbCalculator implements OrderBookListener {
         ticks.put(product, tick);
         if (ticks.keySet().containsAll(requiredSymbols)) {
             double arb = (1.0 / ticks.get(BTC_EUR).getAskPrice()) * (1.0 / ticks.get(ETH_BTC).getAskPrice()) * ticks.get(ETH_EUR).getBidPrice();
+            arb *= 0.997002999;
             double diff = currentArb - arb;
             currentArb = arb;
             boolean same = diff >= -THRESHOLD && diff <= THRESHOLD;
-            if (!same && writer != null) {
+            if (!same && writer != null && currentArb >= 1.0) {
                 try {
                     writer.write(String.join(",", tick.getSessionId(), String.valueOf(tick.getTime()), String.valueOf(arb)));
                     writer.write("\n");
-                    writer.flush();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
