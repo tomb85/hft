@@ -3,7 +3,10 @@ package hft;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.neovisionaries.ws.client.*;
+import com.neovisionaries.ws.client.WebSocket;
+import com.neovisionaries.ws.client.WebSocketAdapter;
+import com.neovisionaries.ws.client.WebSocketFactory;
+import com.neovisionaries.ws.client.WebSocketFrame;
 import hft.gdax.websocket.message.Done;
 import hft.gdax.websocket.message.Match;
 import hft.gdax.websocket.message.Open;
@@ -22,23 +25,25 @@ public class WebsocketMarketDataReceiver extends WebSocketAdapter {
     private static final Gson GSON = new Gson();
     private static final JsonParser PARSER = new JsonParser();
     private static final String SUBSCRIPTION_REQUEST = "{\"type\":\"subscribe\",\"product_ids\":[\"BTC-EUR\",\"ETH-EUR\",\"ETH-BTC\"]}";
-//    private static final String SUBSCRIPTION_REQUEST = "{\"type\":\"subscribe\",\"product_ids\":[\"BTC-USD\"]}";
+    private static final String HEARTBEAT_REQUEST = "{\"type\":\"heartbeat\",\"on\":true}";
 
     private final MarketDataListener listener;
 
     private String sessionId;
-    private WebSocket socket;
 
     public WebsocketMarketDataReceiver(MarketDataListener listener) {
         this.listener = listener;
+        connect();
     }
 
-    public synchronized void start() throws IOException {
-        LOG.info("Application starting");
-        if (socket == null) {
-            socket = new WebSocketFactory().createSocket("wss://ws-feed.gdax.com").addExtension(WebSocketExtension.PERMESSAGE_DEFLATE).addListener(this);
+    private void connect() {
+        LOG.info("Connecting");
+        try {
+            WebSocket webSocket = new WebSocketFactory().createSocket("wss://ws-feed.gdax.com").addListener(this);
+            webSocket.connect();
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to connect to the websocket");
         }
-        socket.connectAsynchronously();
     }
 
     @Override
@@ -51,13 +56,14 @@ public class WebsocketMarketDataReceiver extends WebSocketAdapter {
     private void subscribe(WebSocket websocket) {
         LOG.info("Sending subscription request: " + SUBSCRIPTION_REQUEST);
         websocket.sendText(SUBSCRIPTION_REQUEST);
+        LOG.info("Sending heartbeat request: " + HEARTBEAT_REQUEST);
+        websocket.sendText(HEARTBEAT_REQUEST);
     }
 
     @Override
     public void onDisconnected(WebSocket websocket, WebSocketFrame serverCloseFrame, WebSocketFrame clientCloseFrame, boolean closedByServer) throws IOException {
         LOG.warn("Disconnected, closedByServer: " + closedByServer + ", serverCloseFrame: " + serverCloseFrame + ", clientCloseFrame: " + clientCloseFrame);
-        socket = websocket.recreate();
-        socket.connectAsynchronously();
+        connect();
     }
 
     @Override
