@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 
@@ -54,15 +56,31 @@ public class ArbCalculator implements OrderBookListener {
         Product product = Product.fromProductId(tick.getSymbol());
         ticks.put(product, tick);
         if (ticks.keySet().containsAll(requiredSymbols)) {
+
+            double leg1 = ticks.get(BTC_EUR).getAskSize() * ticks.get(BTC_EUR).getAskPrice();
+            double leg2 = ticks.get(ETH_BTC).getAskSize() * ticks.get(ETH_EUR).getAskPrice();
+            double leg3 = ticks.get(ETH_EUR).getBidSize() * ticks.get(ETH_EUR).getBidPrice();
+
+            double eur = Collections.min(Arrays.asList(leg1, leg2, leg3));
+            double start = eur;
+            double btc = eur * 0.999 / ticks.get(BTC_EUR).getAskPrice();
+            double eth = btc * 0.999 / ticks.get(ETH_BTC).getAskPrice();
+            eur = eth * 0.999 * ticks.get(ETH_EUR).getBidPrice();
+
             double arb = (1.0 / ticks.get(BTC_EUR).getAskPrice()) * (1.0 / ticks.get(ETH_BTC).getAskPrice()) * ticks.get(ETH_EUR).getBidPrice();
             arb *= 0.997002999;
             double diff = currentArb - arb;
             currentArb = arb;
             boolean same = diff >= -THRESHOLD && diff <= THRESHOLD;
-            if (!same && writer != null && currentArb >= 1.0) {
+            if (!same && writer != null) {
                 try {
-                    writer.write(String.join(",", tick.getSessionId(), String.valueOf(tick.getTime()), String.valueOf(arb)));
+                    writer.write(String.join(",",
+                            String.valueOf(tick.getTime()),
+                            String.valueOf(arb),
+                            String.valueOf(eur - start)
+                            ));
                     writer.write("\n");
+                    writer.flush();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

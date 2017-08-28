@@ -90,6 +90,13 @@ public class Tick {
         return time;
     }
 
+    public double getAskSize() {
+        return askSize;
+    }
+
+    public double getBidSize() {
+        return bidSize;
+    }
 
     public static final class TickBuilder {
 
