@@ -57,9 +57,9 @@ public class ArbCalculator implements OrderBookListener {
         ticks.put(product, tick);
         if (ticks.keySet().containsAll(requiredSymbols)) {
 
-            double btcEurCost = 0.976;
-            double ethBtcCost = 0.976;
-            double ethEurCost = 0.976;
+            double btcEurCost = 0.9975;
+            double ethBtcCost = 0.997;
+            double ethEurCost = 0.997;
 
             double leg1 = ticks.get(BTC_EUR).getAskSize() * ticks.get(BTC_EUR).getAskPrice();
             double leg2 = ticks.get(ETH_BTC).getAskSize() * ticks.get(ETH_EUR).getAskPrice();
