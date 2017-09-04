@@ -57,18 +57,22 @@ public class ArbCalculator implements OrderBookListener {
         ticks.put(product, tick);
         if (ticks.keySet().containsAll(requiredSymbols)) {
 
+            double btcEurCost = 0.976;
+            double ethBtcCost = 0.976;
+            double ethEurCost = 0.976;
+
             double leg1 = ticks.get(BTC_EUR).getAskSize() * ticks.get(BTC_EUR).getAskPrice();
             double leg2 = ticks.get(ETH_BTC).getAskSize() * ticks.get(ETH_EUR).getAskPrice();
             double leg3 = ticks.get(ETH_EUR).getBidSize() * ticks.get(ETH_EUR).getBidPrice();
 
             double eur = Collections.min(Arrays.asList(leg1, leg2, leg3));
             double start = eur;
-            double btc = eur * 0.999 / ticks.get(BTC_EUR).getAskPrice();
-            double eth = btc * 0.999 / ticks.get(ETH_BTC).getAskPrice();
-            eur = eth * 0.999 * ticks.get(ETH_EUR).getBidPrice();
+            double btc = eur * btcEurCost / ticks.get(BTC_EUR).getAskPrice();
+            double eth = btc * ethBtcCost / ticks.get(ETH_BTC).getAskPrice();
+            eur = eth * ethEurCost * ticks.get(ETH_EUR).getBidPrice();
 
             double arb = (1.0 / ticks.get(BTC_EUR).getAskPrice()) * (1.0 / ticks.get(ETH_BTC).getAskPrice()) * ticks.get(ETH_EUR).getBidPrice();
-            arb *= 0.997002999;
+            arb *= (btcEurCost * ethBtcCost * ethEurCost);
             double diff = currentArb - arb;
             currentArb = arb;
             boolean same = diff >= -THRESHOLD && diff <= THRESHOLD;
@@ -77,7 +81,8 @@ public class ArbCalculator implements OrderBookListener {
                     writer.write(String.join(",",
                             String.valueOf(tick.getTime()),
                             String.valueOf(arb),
-                            String.valueOf(eur - start)
+                            String.valueOf(eur - start),
+                            String.format("%.2f", start)
                             ));
                     writer.write("\n");
                     writer.flush();
