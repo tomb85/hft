@@ -13,11 +13,13 @@ public class HeartbeatMonitor {
     private static final Logger LOG = Logger.getLogger(HeartbeatMonitor.class);
 
     private final WebSocket websocket;
+    private final String sessionId;
     private final Lock lock = new ReentrantLock();
     private final Condition condition = lock.newCondition();
 
-    public HeartbeatMonitor(WebSocket websocket) {
+    public HeartbeatMonitor(WebSocket websocket, String sessionId) {
         this.websocket = websocket;
+        this.sessionId = sessionId;
         startMonitoringThread();
     }
 
@@ -39,7 +41,7 @@ public class HeartbeatMonitor {
             } finally {
                 lock.unlock();
             }
-        }, "HeartbeatMonitor");
+        }, "HeartbeatMonitor-" + sessionId);
         thread.setDaemon(true);
         thread.start();
     }

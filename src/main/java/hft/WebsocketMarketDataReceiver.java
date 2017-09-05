@@ -29,7 +29,7 @@ public class WebsocketMarketDataReceiver extends WebSocketAdapter {
 
     private final MarketDataListener listener;
 
-    private HeartbeatMonitor heartbeatMonitor;
+    private volatile HeartbeatMonitor heartbeatMonitor;
 
     private String sessionId;
 
@@ -44,7 +44,7 @@ public class WebsocketMarketDataReceiver extends WebSocketAdapter {
             WebSocket webSocket = new WebSocketFactory().createSocket("wss://ws-feed.gdax.com").addListener(this);
             webSocket.connect();
         } catch (Exception e) {
-            throw new RuntimeException("Unable to connect to the websocket");
+            throw new RuntimeException("Unable to connect to the websocket", e);
         }
     }
 
@@ -52,12 +52,12 @@ public class WebsocketMarketDataReceiver extends WebSocketAdapter {
     public void onConnected(WebSocket websocket, Map<String, List<String>> headers) {
         sessionId = UUID.randomUUID().toString();
         LOG.info("Connected to market data websocket. Established new session " + sessionId);
+        startHearbeatMonitoring(websocket, sessionId);
         subscribe(websocket);
-        startHearbeatMonitoring(websocket);
     }
 
-    private void startHearbeatMonitoring(WebSocket websocket) {
-        heartbeatMonitor = new HeartbeatMonitor(websocket);
+    private void startHearbeatMonitoring(WebSocket websocket, String sessionId) {
+        heartbeatMonitor = new HeartbeatMonitor(websocket, sessionId);
     }
 
     private void subscribe(WebSocket websocket) {
